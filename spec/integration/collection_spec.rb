@@ -26,9 +26,20 @@ describe EMMongo::Collection do
 
   it 'should find an object by attribute' do
     @conn, @coll = connection_and_collection
-    
+
     @coll.insert("hello" => 'world')
     @coll.find({"hello" => "world"},{}) do |res|
+      res.size.should >= 1
+      res[0]["hello"].should == "world"
+      done
+    end
+  end
+
+  it 'should find an object with query options' do
+    @conn, @coll = connection_and_collection
+
+    @coll.insert("hello" => 'world')
+    @coll.find({"hello" => "world"},{:slave_ok => true}) do |res|
       res.size.should >= 1
       res[0]["hello"].should == "world"
       done
@@ -40,7 +51,7 @@ describe EMMongo::Collection do
 
     obj = @coll.insert({:_id => 1234, 'foo' => 'bar', :hello => 'world'})
     @coll.first({:_id => 1234},{}) do |res|
-      res['hello'].should == 'world' 
+      res['hello'].should == 'world'
       res['foo'].should == 'bar'
       done
     end
@@ -48,7 +59,7 @@ describe EMMongo::Collection do
 
   it 'should find an object by symbol' do
     @conn, @coll = connection_and_collection
-    
+
     @coll.insert('hello' => 'world')
     @coll.find({:hello => "world"},{}) do |res|
       res.size.should >= 1
@@ -59,7 +70,7 @@ describe EMMongo::Collection do
 
   it 'should find an object by id' do
     @conn, @coll = connection_and_collection
-    
+
     id = @coll.insert('hello' => 'world')
     @coll.find({:_id => id},{}) do |res|
       res.size.should >= 1
@@ -81,7 +92,7 @@ describe EMMongo::Collection do
 
   it 'should find large sets of objects' do
     @conn, @coll = connection_and_collection
-    
+
     (0..1500).each { |n| @coll.insert({n.to_s => n.to_s}) }
     @coll.find do |res|
       res.size.should == EM::Mongo::DEFAULT_QUERY_DOCS
@@ -175,7 +186,7 @@ describe EMMongo::Collection do
 
   it 'should find an object using nested properties' do
     @conn, @coll = connection_and_collection
-    
+
     @coll.insert({
       'name' => 'Google',
       'address' => {
@@ -189,7 +200,7 @@ describe EMMongo::Collection do
     end
   end
 
-  it 'should find objects wxith specific values' do
+  it 'should find objects with specific values' do
     @conn, @coll = connection_and_collection
 
     number_hash.each do |num, word|
@@ -205,7 +216,7 @@ describe EMMongo::Collection do
 
   it 'should find objects greater than something' do
     @conn, @coll = connection_and_collection
-  
+
     number_hash.each do |num, word|
       @coll.insert('num' => num, 'word' => word)
     end
@@ -219,7 +230,7 @@ describe EMMongo::Collection do
 
   it 'should handle multiple pending queries' do
     @conn, @coll = connection_and_collection
-    
+
     id = @coll.insert("foo" => "bar")
     received = 0
 

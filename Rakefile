@@ -20,7 +20,6 @@ class MongoRunner
     pidf = "#{dir}/mongod.pid"
     logf = "#{dir}/mongo.log"
     begin
-      #puts "mongod run #{auth} --fork -vvvvvvv --dbpath #{dir} --pidfilepath #{pidf} --logpath #{logf} >> /dev/null "
       system "mongod run #{auth} --fork -vvvvvvv --dbpath #{dir} --pidfilepath #{pidf} --logpath #{logf} >> /dev/null "
       yield if block_given?
     ensure

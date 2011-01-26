@@ -51,5 +51,22 @@ describe EMMongo::Connection do
     done
   end
 
+  it 'should set query options' do
+    @conn = EMMongo::Connection.new
+    em_conn = @conn.db.connection
+
+    options = {
+      :tailable_cursor   => true, # bit 1
+      :slave_ok          => true, # bit 2
+      :no_cursor_timeout => true, # bit 4
+      :await_data        => true, # bit 5
+      :exhaust           => true  # bit 6
+    }
+    em_conn.op_query_bitvector(options).should == 0b1110110
+    em_conn.op_query_bitvector({}).should == 0
+
+    done
+  end
+
 
 end

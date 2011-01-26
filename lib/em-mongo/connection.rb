@@ -99,9 +99,9 @@ module EM::Mongo
       send_command(message.to_s, req_id)
     end
 
-    def find(collection_name, skip, limit, query, fields, &blk)
+    def find(collection_name, query_opts, skip, limit, query, fields, &blk)
       message = BSON::ByteBuffer.new
-      message.put_int(RESERVED) # query options
+      message.put_int(op_query_bitvector(query_opts)) # query options
       BSON::BSON_RUBY.serialize_cstr(message, collection_name)
       message.put_int(skip)
       message.put_int(limit)
@@ -110,6 +110,16 @@ module EM::Mongo
       req_id = new_request_id
       message.prepend!(message_headers(OP_QUERY, req_id, message))
       send_command(message.to_s, req_id, &blk)
+    end
+
+    def op_query_bitvector(opts={})
+      query_opts = 0
+      query_opts = query_opts | (1 << 1) if opts.delete(:tailable_cursor)
+      query_opts = query_opts | (1 << 2) if opts.delete(:slave_ok)
+      query_opts = query_opts | (1 << 4) if opts.delete(:no_cursor_timeout)
+      query_opts = query_opts | (1 << 5) if opts.delete(:await_data)
+      query_opts = query_opts | (1 << 6) if opts.delete(:exhaust)
+      query_opts
     end
 
     # EM hooks

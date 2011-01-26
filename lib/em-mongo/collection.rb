@@ -15,7 +15,7 @@ module EM::Mongo
       skip  = opts.delete(:skip) || 0
       limit = opts.delete(:limit) || 0
 
-      @connection.find(@name, skip, limit, selector, nil, &blk)
+      @connection.find(@name, opts, skip, limit, selector, nil, &blk)
     end
 
     def first(selector={}, opts={}, &blk)
