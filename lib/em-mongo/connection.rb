@@ -161,11 +161,12 @@ module EM::Mongo
       @checking_master = true
       puts "Checking master"
       find('admin.$cmd', {}, 0, -1, {:isMaster => 1}, nil) do |res|
-        res = res ? res.first : {}
-        if res && !res['ismaster'] && res['primary']
+        res = res.first || {}
+        if !res['ismaster'] && res['primary']
           host, port = res['primary'].split(/\:/)
           port ||= 27017
           if host != @host || port != @port
+            @host, @port = host, port
             puts "New master is #{host}:#{port}"
             reconnect(host, port)
           end
