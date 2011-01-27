@@ -146,10 +146,34 @@ module EM::Mongo
     end
 
     def connection_completed
-      @buffer = BSON::ByteBuffer.new
+      @buffer       = BSON::ByteBuffer.new
       @is_connected = true
-      @retries = 0
+      @retries      = 0
       succeed
+      if @previous_error
+        @previous_error = false
+        check_master
+      end
+    end
+
+    def check_master
+      return if @checking_master
+      @checking_master = true
+      puts "Checking master"
+      find('admin.$cmd', {}, 0, -1, {:isMaster => 1}, nil) do |res|
+        res = res ? res.first : {}
+        if res && !res['ismaster'] && res['primary']
+          host, port = res['primary'].split(/\:/)
+          port ||= 27017
+          if host != @host || port != @port
+            puts "New master is #{host}:#{port}"
+            reconnect(host, port)
+          end
+        else
+          puts "Master is still #{@host}:#{@port}"
+        end
+        @checking_master = false
+      end
     end
 
     def message_received?(buffer)
@@ -218,6 +242,7 @@ module EM::Mongo
 
     def unbind
       @is_connected = false
+      @previous_error = error?
 
       # XXX do we need to fail the responses here?
       @request_id = 0
